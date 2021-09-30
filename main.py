@@ -1,12 +1,12 @@
-import weather_info as wi
 import requests
 import json
 import sounddevice as sd
 import soundfile as sf
 import io
-from gpiozero import AngularServo, LED, Button
-from gpiozero.pins.pigpio import PiGPIOFactory
+from gpiozero import Button
 from signal import pause
+from cmd import Cmd
+
 
 kakao_speech_url= "https://kakaoi-newtone-openapi.kakao.com/v1/recognize"
 
@@ -18,34 +18,9 @@ headers = {
     "Authorization" : "KakaoAK " + rest_api_key,
 }
 
-factory = PiGPIOFactory(host='192.168.35.71')
-
-servo = AngularServo(16,pin_factory=factory,
-    min_angle=-90, max_angle=90,
-    min_pulse_width=0.00045, max_pulse_width=0.0023)
-
-led = LED(13)
 button = Button(26)
 
-
-def command(value):
-    if value == '전등 켜':
-        led.on()
-        
-    elif value == '전등 꺼':
-        led.off()
-        
-    elif value == '문 열어':
-        move_angle(90)
-        
-    elif value == '문 닫어':
-        move_angle(-90)
-        
-    elif value == '날씨 알려줘':
-        wi.play_weather()
-
-    else:
-        wi.play_default()
+cmd = Cmd()
 
 
 def recognize(audio):
@@ -59,16 +34,14 @@ def recognize(audio):
     except: # 인식 실패
         value = None
     print('인식 결과 :',value)
-    command(value)
-    return value
+    cmd.ctr(value)
+    return
 
 
 def record(seconds=10, fs=16000, channels=1):
     global data
-    data = sd.rec(int(seconds*fs), samplerate=fs, channels=1)
+    data = sd.rec(int(seconds*fs), samplerate=fs, channels=channels)
 
-def move_angle(value):
-    servo.angle= value
 
 def end_record():
     sd.stop()
